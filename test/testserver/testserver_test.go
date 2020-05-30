@@ -2,28 +2,21 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
 const testBody = `{
-	"svc_msg": 1
-	"token": "test1"
+	"svc_msg": 1,
+	"token": "test1",
 	"scope": "read"
 }
 `
 
-func B2S(bs []uint8) string {
-	b := make([]byte, len(bs))
-	for i, v := range bs {
-		b[i] = byte(v)
-	}
-	s := string(b)
-	return s
-}
 func TestServer(t *testing.T) {
 	srv := httptest.NewServer(Handlers())
 	defer srv.Close()
@@ -31,6 +24,7 @@ func TestServer(t *testing.T) {
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/checktoken", srv.URL), bytes.NewBufferString(testBody)) //BTW check for error
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("SVC-id", "2")
+	req.Header.Set("Request-id", "1")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -39,28 +33,14 @@ func TestServer(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body := SVCResponseOK{}
+	err = json.NewDecoder(resp.Body).Decode(&body)
 	fmt.Println("response Status:", resp.Status)
 	fmt.Println("response Headers:", resp.Header)
-	fmt.Printf("response Body: %s", string(body))
-	/* res, err := http.Get(fmt.Sprintf("%s/rate/btc", srv.URL))
+	fmt.Printf("response Body: %v", (body))
 
-	if err != nil {
-		t.Fatal(err)
+	expectedBody := SVCResponseOK{1, "test_client_id", 2002, "testuser0@mail.ru", 3600, 0}
+	if !reflect.DeepEqual(expectedBody, body) {
+		t.Fatal(fmt.Sprintf("unexpected response body: %v, get: %v", body, expectedBody))
 	}
-
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("status not OK")
-	}
-
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(body) != "BitCoin to USD rate: 0.000000 $\n" {
-		t.Fail()
-	} */
 }
