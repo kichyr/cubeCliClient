@@ -1,0 +1,32 @@
+{
+    "tokens": [
+        {
+            "user_id": 0,
+            "username": "testuser0@mail.ru",
+            "expires_in": 3600,
+            "token": "test1",
+            "scopes": ["read", "write"]
+        },
+        {
+            "user_id": 1,
+            "username": "testuser1@mail.ru",
+            "expires_in": 3600,
+            "token": "test2",
+            "scopes": ["read"]
+        },
+        {
+            "user_id": 2,
+            "username": "testuser2@mail.ru",
+            "expires_in": 3600,
+            "token": "test3",
+            "scopes": ["admin"]
+        },
+        {
+            "user_id": 3,
+            "username": "testuser3@mail.ru",
+            "expires_in": 3600,
+            "token": "test4",
+            "scopes": []
+        }
+    ]
+}
