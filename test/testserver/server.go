@@ -1,4 +1,4 @@
-package main
+package testserver
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 type StatusCode int32
 
 const (
-	CUBE_OAUTH2_ERR_OK StatusCode = iota + 1
+	CUBE_OAUTH2_ERR_OK StatusCode = iota
 	CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND
 	CUBE_OAUTH2_ERR_DB_ERROR
 	CUBE_OAUTH2_ERR_UNKNOWN_MSG
@@ -21,7 +21,24 @@ const (
 )
 
 func (code StatusCode) String() string {
-	return fmt.Sprintf("%v", int32(code))
+	switch code {
+	case CUBE_OAUTH2_ERR_OK:
+		return "CUBE_OAUTH2_ERR_OK"
+	case CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND:
+		return "CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND"
+	case CUBE_OAUTH2_ERR_DB_ERROR:
+		return "CUBE_OAUTH2_ERR_DB_ERROR"
+	case CUBE_OAUTH2_ERR_UNKNOWN_MSG:
+		return "CUBE_OAUTH2_ERR_UNKNOWN_MSG"
+	case CUBE_OAUTH2_ERR_BAD_PACKET:
+		return "CUBE_OAUTH2_ERR_BAD_PACKET"
+	case CUBE_OAUTH2_ERR_BAD_CLIENT:
+		return "CUBE_OAUTH2_ERR_BAD_CLIENT"
+	case CUBE_OAUTH2_ERR_BAD_SCOPE:
+		return "CUBE_OAUTH2_ERR_BAD_SCOPE"
+	default:
+		panic(fmt.Errorf("unknown code: %v", int32(code)))
+	}
 }
 
 type SVCResponseOK struct {
@@ -146,7 +163,11 @@ func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			errorResponse(CUBE_OAUTH2_ERR_BAD_PACKET, err.Error())
 			return
 		}
-
+		if err.Error() == CUBE_OAUTH2_ERR_BAD_SCOPE.String() {
+			errorResponse(CUBE_OAUTH2_ERR_BAD_SCOPE, err.Error())
+			return
+		}
+		panic(fmt.Errorf("unexpected error in checkToken: %s", err.Error()))
 	}
 	// Given token with desired scope was successfully found
 	w.Header().Set("Content-Type", "application/json")
@@ -165,12 +186,14 @@ func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func Handlers() http.Handler {
 	r := http.NewServeMux()
-	r.Handle("/checktoken", *NewTokenChecker("./test_tokens.json"))
+	r.Handle("/", *NewTokenChecker("./test_tokens.json"))
 	return r
 }
 
-func main() {
+type TestServer struct {
+}
 
-	http.Handle("/checktoken", *NewTokenChecker("./test_tokens.json"))
-	http.ListenAndServe(":8091", nil)
+func (serv *TestServer) StartServer(port int, storagePath string) {
+	http.Handle("/", *NewTokenChecker(storagePath))
+	http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 }
