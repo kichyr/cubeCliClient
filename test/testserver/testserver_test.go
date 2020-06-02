@@ -25,7 +25,8 @@ const testBadScopeBody = `{
 `
 
 func TestServerOKRespose(t *testing.T) {
-	srv := httptest.NewServer(Handlers())
+	serv := NewTestServer("./test_tokens.json")
+	srv := httptest.NewServer(serv.Handlers())
 	defer srv.Close()
 
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/", srv.URL), bytes.NewBufferString(testOKBody)) //BTW check for error
@@ -41,7 +42,7 @@ func TestServerOKRespose(t *testing.T) {
 	defer resp.Body.Close()
 
 	body := SVCResponseOK{}
-	err = json.NewDecoder(resp.Body).Decode(&body)
+	_ = json.NewDecoder(resp.Body).Decode(&body)
 	fmt.Println("response Status:", resp.Status)
 	fmt.Println("response Headers:", resp.Header)
 	fmt.Printf("response Body: %v", (body))
@@ -53,10 +54,11 @@ func TestServerOKRespose(t *testing.T) {
 }
 
 func TestServerWrongToken(t *testing.T) {
-	srv := httptest.NewServer(Handlers())
+	serv := NewTestServer("./test_tokens.json")
+	srv := httptest.NewServer(serv.Handlers())
 	defer srv.Close()
 
-	req, _ := http.NewRequest("POST", fmt.Sprintf("%s", srv.URL), bytes.NewBufferString(testBadScopeBody)) //BTW check for error
+	req, _ := http.NewRequest("POST", srv.URL, bytes.NewBufferString(testBadScopeBody)) //BTW check for error
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("SVC-id", "2")
 	req.Header.Set("Request-id", "1")
@@ -69,7 +71,7 @@ func TestServerWrongToken(t *testing.T) {
 	defer resp.Body.Close()
 
 	body := SVCResponseERROR{}
-	err = json.NewDecoder(resp.Body).Decode(&body)
+	_ = json.NewDecoder(resp.Body).Decode(&body)
 	fmt.Println("response Status:", resp.Status)
 	fmt.Println("response Headers:", resp.Header)
 	fmt.Printf("response Body: %v", (body))

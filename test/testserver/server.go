@@ -77,6 +77,7 @@ type TokenInfo struct {
 func NewTokenStorage(path string) *TokenStorage {
 	jsonFile, err := os.Open(path)
 	if err != nil {
+		fmt.Println(path)
 		panic(fmt.Sprintf("Cannot open storage file %s", path))
 	}
 
@@ -184,16 +185,23 @@ func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(w, string(respBody))
 }
 
-func Handlers() http.Handler {
+func (serv *TestServer) Handlers() http.Handler {
 	r := http.NewServeMux()
-	r.Handle("/", *NewTokenChecker("./test_tokens.json"))
+	r.Handle("/", *NewTokenChecker(serv.StoragePath))
 	return r
 }
 
 type TestServer struct {
+	StoragePath string // path to json with token data
 }
 
-func (serv *TestServer) StartServer(port int, storagePath string) {
-	http.Handle("/", *NewTokenChecker(storagePath))
-	http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
+func NewTestServer(storagePath string) *TestServer {
+	serv := TestServer{}
+	serv.StoragePath = storagePath
+	return &serv
+}
+
+func (serv *TestServer) StartServer(port int) {
+	http.Handle("/", *NewTokenChecker(serv.StoragePath))
+	_ = http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 }
