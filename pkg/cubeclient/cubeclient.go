@@ -28,7 +28,7 @@ func CheckToken(
 	host string,
 	port int,
 	token string,
-	scope string) string {
+	scope string) (string, error) {
 
 	requestBodyFormat := `{
 		"svc_msg": 1,
@@ -46,31 +46,35 @@ func CheckToken(
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("Error during executing request, error: %s", err.Error())
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusAccepted {
 		body := SVCResponseOK{}
 		err = json.NewDecoder(resp.Body).Decode(&body)
 		if err != nil {
-			panic(err)
+			return "", fmt.Errorf("Bad ok response body.")
 		}
 		prettyResponse, err := prettyResponseBody(body)
 		if err != nil {
-			panic(err)
+			return "", fmt.Errorf(
+				"Unable to prettify body: %v, error: %s",
+				body, err.Error())
 		}
-		return prettyResponse
+		return prettyResponse, nil
 	}
 	body := SVCResponseERROR{}
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("Bad error response body.")
 	}
 	prettyResponse, err := prettyResponseBody(body)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf(
+			"Unable to prettify error body: %v, error: %s",
+			body, err.Error())
 	}
-	return prettyResponse
+	return prettyResponse, nil
 }
 
 func prettyResponseBody(respBody interface{}) (string, error) {
