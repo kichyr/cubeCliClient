@@ -1,0 +1,40 @@
+{
+    "tokens": [
+        {
+            "user_id": 0,
+            "client_id": "test_client_id",
+            "username": "testuser0@mail.ru",
+            "client_type": 2002,
+            "expires_in": 3600,
+            "token": "test1",
+            "scopes": ["read", "write"]
+        },
+        {
+            "user_id": 1,
+            "client_id": "test_client_id",
+            "username": "testuser1@mail.ru",
+            "client_type": 2002,
+            "expires_in": 3600,
+            "token": "test2",
+            "scopes": ["read"]
+        },
+        {
+            "user_id": 2,
+            "client_id": "test_client_id",
+            "username": "testuser2@mail.ru",
+            "client_type": 2002,
+            "expires_in": 3600,
+            "token": "test3",
+            "scopes": ["admin"]
+        },
+        {
+            "user_id": 3,
+            "client_id": "test_client_id",
+            "username": "testuser3@mail.ru",
+            "client_type": 2002,
+            "expires_in": 3600,
+            "token": "test4",
+            "scopes": []
+        }
+    ]
+}

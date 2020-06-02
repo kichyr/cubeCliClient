@@ -1,0 +1,24 @@
+linters-settings:
+  gofmt:
+    simplify: true
+  gocyclo:
+    min-complexity: 15
+  maligned:
+    suggest-new: true
+  linters:
+    enable:
+      - errcheck
+      - deadcode
+      - gosimple
+      - govet
+      - ineffassign
+      - staticcheck
+      - structcheck
+      - typecheck
+      - unused
+      - varcheck
+      - goconst
+      - gocyclo
+      - gofmt
+      - goimports
+      - unconvert
