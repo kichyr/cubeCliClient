@@ -217,6 +217,7 @@ func NewTestServer(storagePath string) *TestServer {
 	return &srv
 }
 
+
 func (srv *TestServer) StartServer(port int) error {
 	tokenChecker, err := NewTokenChecker(srv.StoragePath)
 	if err != nil {
