@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 5 {
+	if len(os.Args) != 2 {
 		fmt.Print("wrong number of cli args: \n testserver <port>")
 		os.Exit(1)
 	}

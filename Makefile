@@ -1,6 +1,11 @@
 .PHONY: docker-ci
 docker-ci:
-	@docker build --no-cache --network="host" -t cubeclient-ci:0.0.0 -f docker/ci.dockerfile .
+
+	@docker build --no-cache -t cubeclient-ci:0.0.0 -f docker/ci.dockerfile .
+
+.PHONY: test
+test: docker-ci
+	@docker run cubeclient-ci:0.0.0
 
 .PHONY: test-local
 test-local:
@@ -9,6 +14,8 @@ test-local:
 	@go test -count=1 ./cmd/...
 	make functional-tests
 
+
+.PHONY: functional-tests
 functional-tests: build build-test-server
 	pytest -s test/functional_test.py
 	make clear
@@ -19,7 +26,7 @@ lint:
 
 .PHONY: start-test-server
 start-test-server:
-	@go run ./test/testserver/main.go
+	@go run ./cmd/testserver/main.go 8091
 
 .PHONY: build
 build:
