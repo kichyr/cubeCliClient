@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 )
 
@@ -41,7 +42,7 @@ func CheckToken(
 		bytes.NewBufferString(fmt.Sprintf(requestBodyFormat, token, scope))) //BTW check for error
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("SVC-id", "2")
-	req.Header.Set("Request-id", "1")
+	req.Header.Set("Request-id", fmt.Sprint(rand.Intn(1000)))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

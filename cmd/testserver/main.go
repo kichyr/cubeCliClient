@@ -19,5 +19,9 @@ func main() {
 		fmt.Printf("wrong number format of port: %s", os.Args[1])
 		os.Exit(1)
 	}
-	srv.StartServer(port) // start test server on localhost:8091
+	err = srv.StartServer(port) // start test server on localhost:8091
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
 }
