@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 )
@@ -37,7 +38,8 @@ func (code StatusCode) String() string {
 	case CUBE_OAUTH2_ERR_BAD_SCOPE:
 		return "CUBE_OAUTH2_ERR_BAD_SCOPE"
 	default:
-		panic(fmt.Errorf("unknown code: %v", int32(code)))
+		log.Printf("unknown code: %v \n", int32(code))
+		return ""
 	}
 }
 
@@ -74,32 +76,36 @@ type TokenInfo struct {
 	Scopes     []string `json:"scopes"`
 }
 
-func NewTokenStorage(path string) *TokenStorage {
+func NewTokenStorage(path string) (*TokenStorage, error) {
 	jsonFile, err := os.Open(path)
 	if err != nil {
 		fmt.Println(path)
-		panic(fmt.Sprintf("Cannot open storage file %s", path))
+		return nil, fmt.Errorf("Cannot open storage file %s", path)
 	}
 
 	plan, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
-		panic(fmt.Sprintf("Cannot read storage file %s", path))
+		return nil, fmt.Errorf("Cannot read storage file %s", path)
 	}
 
 	ts := TokenStorage{make([]TokenInfo, 0)}
 	err = json.Unmarshal(plan, &ts)
 	if err != nil {
-		panic("Cannot unmarshal the json.")
+		return nil, fmt.Errorf("Cannot unmarshal the json.")
 	}
-	return &ts
+	return &ts, nil
 }
 
 type TokenChecker struct {
 	tStorage TokenStorage
 }
 
-func NewTokenChecker(storagePath string) *TokenChecker {
-	return &TokenChecker{*NewTokenStorage(storagePath)}
+func NewTokenChecker(storagePath string) (*TokenChecker, error) {
+	ts, err := NewTokenStorage(storagePath)
+	if err != nil {
+		return nil, err
+	}
+	return &TokenChecker{*ts}, nil
 }
 
 // checkToken check given token and scope according data in TokenStorage.
@@ -156,19 +162,25 @@ func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// only svc_msg = 1 supported
+	if parsedBody.SVCMsg != 1 {
+		errorResponse(CUBE_OAUTH2_ERR_UNKNOWN_MSG, "only svc_msg = 1 supported")
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
 	validTokenInf, err := ts.checkToken(parsedBody.Token, parsedBody.Scope)
 	if err != nil {
 		if err.Error() == CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND.String() {
-			errorResponse(CUBE_OAUTH2_ERR_BAD_PACKET, err.Error())
+			errorResponse(CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND, err.Error())
 			return
 		}
 		if err.Error() == CUBE_OAUTH2_ERR_BAD_SCOPE.String() {
 			errorResponse(CUBE_OAUTH2_ERR_BAD_SCOPE, err.Error())
 			return
 		}
-		panic(fmt.Errorf("unexpected error in checkToken: %s", err.Error()))
+		log.Printf("unexpected error in checkToken: %s \n", err.Error())
 	}
 	// Given token with desired scope was successfully found
 	w.Header().Set("Content-Type", "application/json")
@@ -187,7 +199,8 @@ func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (serv *TestServer) Handlers() http.Handler {
 	r := http.NewServeMux()
-	r.Handle("/", *NewTokenChecker(serv.StoragePath))
+	tokenChecker, _ := NewTokenChecker(serv.StoragePath)
+	r.Handle("/", *tokenChecker)
 	return r
 }
 
@@ -201,7 +214,12 @@ func NewTestServer(storagePath string) *TestServer {
 	return &serv
 }
 
-func (serv *TestServer) StartServer(port int) {
-	http.Handle("/", *NewTokenChecker(serv.StoragePath))
+func (serv *TestServer) StartServer(port int) error {
+	tokenChecker, err := NewTokenChecker(serv.StoragePath)
+	if err != nil {
+		return err
+	}
+	http.Handle("/", tokenChecker)
 	_ = http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
+	return nil
 }

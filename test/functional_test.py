@@ -41,7 +41,7 @@ class TestCubeCli:
     def test_bad_server_host(self):
         try:
             subprocess.check_output(
-                ['./cubeclient', 'localhost', "999999", 'test1', 'write']
+                ['./cubeclient', 'localhost', "20", 'test1', 'write']
             )
         except subprocess.CalledProcessError as exc:
             assert b"Error during executing request" in exc.output
@@ -74,3 +74,26 @@ class TestCubeCli:
             b"error: 6 \n" +
             b"message: CUBE_OAUTH2_ERR_BAD_SCOPE \n"
         )
+
+    def test_token_not_found_response(self):
+        output = subprocess.check_output(
+            [
+                './cubeclient', 'localhost',
+                str(self.test_srv_port), 'no_such_token', 'admin'
+            ]
+        )
+        print(output)
+        assert(
+            output ==
+            b"error: 1 \n" +
+            b"message: CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND \n"
+        )
+
+    def test_integer_bad_port(self):
+        try:
+            subprocess.check_output(
+                ['./cubeclient', 'localhost', "-1", 'test1', 'write']
+            )
+        except subprocess.CalledProcessError as exc:
+            print(exc.output)
+            assert b"wrong format of port" in exc.output
