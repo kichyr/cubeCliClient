@@ -1,4 +1,6 @@
 #  CubeClient(+ TestServer) [![Build Status](https://travis-ci.org/kichyr/cubeCliClient.svg?branch=master)](https://travis-ci.org/kichyr/cubeCliClient)
+
+## !! if I didn’t quite correctly understand the task, I apologize, its wording is not very clear !!
 Quick start:
 ```
 $ make start-test-server &
