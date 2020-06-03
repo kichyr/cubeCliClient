@@ -8,6 +8,8 @@ import (
 	"github.com/kichyr/cubeCliClient/pkg/cubeclient"
 )
 
+const MAX_PORT_NUMBER = 65535
+
 func main() {
 	if len(os.Args) != 5 {
 		fmt.Print("wrong number of cli args: \n cubeclient <host> <port> <token> <scope>")
@@ -15,7 +17,7 @@ func main() {
 	}
 	host := os.Args[1]
 	port, err := strconv.Atoi(os.Args[2])
-	if err != nil {
+	if err != nil || (port >= MAX_PORT_NUMBER || port < 0) {
 		fmt.Printf("wrong format of port: %s \n", os.Args[2])
 		os.Exit(1)
 	}

@@ -162,12 +162,18 @@ func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// only svc_msg = 1 supported
+	if parsedBody.SVCMsg != 1 {
+		errorResponse(CUBE_OAUTH2_ERR_UNKNOWN_MSG, "only svc_msg = 1 supported")
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
 	validTokenInf, err := ts.checkToken(parsedBody.Token, parsedBody.Scope)
 	if err != nil {
 		if err.Error() == CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND.String() {
-			errorResponse(CUBE_OAUTH2_ERR_BAD_PACKET, err.Error())
+			errorResponse(CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND, err.Error())
 			return
 		}
 		if err.Error() == CUBE_OAUTH2_ERR_BAD_SCOPE.String() {
