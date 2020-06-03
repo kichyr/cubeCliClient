@@ -22,24 +22,34 @@ type SVCResponseERROR struct {
 	ErrorString string `json:"error_string"`
 }
 
-// CheckToken validates token with scope by
+type SVCRequestBody struct {
+	SVCMsg int32  `json:"svc_msg"`
+	Token  string `json:"token"`
+	Scope  string `json:"scope"`
+}
+
+// CheckToken validates token & scope by
 // sending request to the given token server.
-// Server and client use CUBE OAUTH2 protocol
+// Server and client use CUBE OAUTH2 protocol.
 func CheckToken(
 	host string,
 	port int,
 	token string,
 	scope string) (string, error) {
 
-	requestBodyFormat := `{
-		"svc_msg": 1,
-		"token": "%s",
-		"scope": "%s"
-	}`
+	reqBody := SVCRequestBody{
+		SVCMsg: 1,
+		Token:  token,
+		Scope:  scope,
+	}
+
+	reqBytesBody, _ := json.Marshal(reqBody)
+
 	req, _ := http.NewRequest(
 		"POST",
 		fmt.Sprintf("http://%s:%v", host, port),
-		bytes.NewBufferString(fmt.Sprintf(requestBodyFormat, token, scope))) //BTW check for error
+		bytes.NewBuffer(reqBytesBody),
+	)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("SVC-id", "2")
 	req.Header.Set("Request-id", fmt.Sprint(rand.Intn(1000)))
@@ -78,6 +88,9 @@ func CheckToken(
 	return prettyResponse, nil
 }
 
+// Genrates message in human readable format according to
+// given response body. It returns error if respBody has
+// unexpected format.
 func prettyResponseBody(respBody interface{}) (string, error) {
 	switch respBody := respBody.(type) {
 	default:

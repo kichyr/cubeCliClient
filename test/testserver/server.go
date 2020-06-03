@@ -96,6 +96,9 @@ func NewTokenStorage(path string) (*TokenStorage, error) {
 	return &ts, nil
 }
 
+// TokenChecker represents interface for loading
+// token data from external storage and cheking
+// token & scope pair according to this data.
 type TokenChecker struct {
 	tStorage TokenStorage
 }
@@ -130,23 +133,24 @@ func (tc *TokenChecker) checkToken(token string, scope string) (*TokenInfo, erro
 
 func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
+	// function that simplify sending error responses
 	errorResponse := func(errorCode StatusCode, message string) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		respBody, _ := json.Marshal(SVCResponseERROR{int32(errorCode), message})
 		fmt.Fprint(w, string(respBody))
 	}
-
+	// expect Post method
 	if req.Method != http.MethodPost {
 		errorResponse(CUBE_OAUTH2_ERR_BAD_PACKET, "bad method")
 		return
 	}
-
+	// expect Content-Type be an application/json
 	if contentType != "application/json" {
 		errorResponse(CUBE_OAUTH2_ERR_BAD_PACKET, "unsupported content-type")
 		return
 	}
-
+	// expect required protocol headers
 	svcID := req.Header.Get("SVC-id")
 	requestID := req.Header.Get("Request-id")
 	if svcID == "" || requestID == "" {
@@ -168,8 +172,7 @@ func (ts TokenChecker) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
+	// validate token using TokenChecker
 	validTokenInf, err := ts.checkToken(parsedBody.Token, parsedBody.Scope)
 	if err != nil {
 		if err.Error() == CUBE_OAUTH2_ERR_TOKEN_NOT_FOUND.String() {
@@ -209,13 +212,13 @@ type TestServer struct {
 }
 
 func NewTestServer(storagePath string) *TestServer {
-	serv := TestServer{}
-	serv.StoragePath = storagePath
-	return &serv
+	srv := TestServer{}
+	srv.StoragePath = storagePath
+	return &srv
 }
 
-func (serv *TestServer) StartServer(port int) error {
-	tokenChecker, err := NewTokenChecker(serv.StoragePath)
+func (srv *TestServer) StartServer(port int) error {
+	tokenChecker, err := NewTokenChecker(srv.StoragePath)
 	if err != nil {
 		return err
 	}
