@@ -1,4 +1,4 @@
-#  CubeClient(+ TestServer)
+#  CubeClient(+ TestServer) https://travis-ci.org/kichyr/cubeCliClient.svg?branch=master
 This repo contains implementation of CubeClient and Cube test server that simulate oath2 communication with authentication server in purpose of token scope check.
 
 Quick start:
